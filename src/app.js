@@ -26,7 +26,7 @@ app.get("/", (req, res) => {
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://smart-chat-be.vercel.app/",
+  "https://smart-chat-fe.vercel.app/",
 ];
 
 app.use(
