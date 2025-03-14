@@ -79,7 +79,7 @@ class qdrant {
         "python.exe"
       );
       const scriptPath = path.join(process.cwd(), "src/scripts", "script.py");
-      const pythonProcess = spawn(pythonExecutable, [scriptPath, text]);
+      const pythonProcess = spawn(python3, [scriptPath, text]);
 
       let output = "";
       let errorOutput = "";
