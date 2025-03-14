@@ -15,9 +15,29 @@ app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
+// app.use(
+//   cors({
+//     origin: "http://localhost:3000", // Change this to your frontend URL
+//     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+//     allowedHeaders: "Content-Type,Authorization",
+//     credentials: true,
+//   })
+// );
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://smart-chat-be.vercel.app/",
+];
+
 app.use(
   cors({
-    origin: "http://localhost:3000", // Change this to your frontend URL
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     allowedHeaders: "Content-Type,Authorization",
     credentials: true,
