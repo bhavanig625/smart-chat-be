@@ -71,8 +71,15 @@ class qdrant {
   async generateFastEmbedding(text) {
     return new Promise((resolve, reject) => {
       console.log("Generating fastText embedding for:", text);
+
+      const pythonExecutable = path.join(
+        process.cwd(),
+        "venv",
+        "bin",
+        "python.exe"
+      );
       const scriptPath = path.join(process.cwd(), "src/scripts", "script.py");
-      const pythonProcess = spawn("python", [scriptPath, text]);
+      const pythonProcess = spawn(pythonExecutable, [scriptPath, text]);
 
       let output = "";
       let errorOutput = "";
