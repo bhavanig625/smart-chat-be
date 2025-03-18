@@ -68,20 +68,57 @@ class qdrant {
     }
   }
 
+  // async generateFastEmbedding(text) {
+  //   return new Promise((resolve, reject) => {
+  //     console.log("Generating fastText embedding for:", text);
+
+  //     const pythonExecutable = path.join(
+  //       process.cwd(),
+  //       "venv",
+  //       "bin",
+  //       "python.exe"
+  //     );
+  //     const scriptPath = path.join(process.cwd(), "src/scripts", "script.py");
+  //     const pythonProcess = spawn("python3", [scriptPath, text]);
+
+  //     let output = "";
+  //     let errorOutput = "";
+
+  //     pythonProcess.stdout.on("data", (data) => {
+  //       output += data.toString();
+  //     });
+
+  //     pythonProcess.stderr.on("data", (data) => {
+  //       errorOutput += data.toString();
+  //     });
+
+  //     pythonProcess.on("close", (code) => {
+  //       if (code === 0) {
+  //         const vector = Array.from(
+  //           new Float32Array(output.trim().split(",").map(parseFloat))
+  //         );
+  //         resolve(vector);
+  //       } else {
+  //         reject(
+  //           new Error(
+  //             `Python script exited with code ${code}: ${errorOutput.trim()}`
+  //           )
+  //         );
+  //       }
+  //     });
+  //   });
+  // }
+
   async generateFastEmbedding(text) {
     return new Promise((resolve, reject) => {
       console.log("Generating fastText embedding for:", text);
 
-      const pythonExecutable = path.join(
-        process.cwd(),
-        "venv",
-        "bin",
-        "python.exe"
-      );
       const scriptPath = path.join(process.cwd(), "src/scripts", "script.py");
-      const pythonProcess = spawn("python3", [scriptPath, text]);
+
+      const pythonProcess = spawn("python", [scriptPath, text]);
 
       let output = "";
+
       let errorOutput = "";
 
       pythonProcess.stdout.on("data", (data) => {
@@ -97,6 +134,7 @@ class qdrant {
           const vector = Array.from(
             new Float32Array(output.trim().split(",").map(parseFloat))
           );
+
           resolve(vector);
         } else {
           reject(
@@ -109,12 +147,37 @@ class qdrant {
     });
   }
 
+  async getFastEmbedding(text) {
+    try {
+      console.log("Fetching embedding");
+      const response = await fetch(
+        `${process.env.PYTHON_EMBED_API}/${encodeURIComponent(text)}`,
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.embedding[0];
+    } catch (error) {
+      console.error("Error fetching embedding:", error);
+      throw error;
+    }
+  }
+
   async insertData(collectionName, text) {
     try {
       console.log("Inserting data into Qdrant:", collectionName, text);
       await this.ensureUserCollection(collectionName);
       //Generate vector embeddings
-      const embedding = await this.generateFastEmbedding(text);
+      const embedding = await this.getFastEmbedding(text);
       const cleanVector = embedding.map((v) => (isNaN(v) ? 0 : v));
       const timestamp = new Date();
 
@@ -154,11 +217,11 @@ class qdrant {
   async searchQdrant(collectionName, query, top = 5, filter = null) {
     try {
       await this.ensureUserCollection(collectionName);
-      const queryEmbedding = await this.generateFastEmbedding(query);
+      const queryEmbedding = await this.getFastEmbedding(query);
       if (!Array.isArray(queryEmbedding) || queryEmbedding.length === 0) {
         throw new Error("Invalid query embedding: Must be a non-empty array.");
       }
-      console.log("Searching Qdrant for:", collectionName);
+      console.log("Searching Qdrant :", collectionName);
 
       const cleanedVector = queryEmbedding.map((v) => (isNaN(v) ? 0 : v));
       const timestamp = new Date();
