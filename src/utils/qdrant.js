@@ -7,6 +7,7 @@ class qdrant {
   constructor() {
     this.QDRANT_URL = process.env.QDRANT_ENDPOINT_URL;
     this.QDRANT_API_KEY = process.env.QDRANT_API_KEY;
+    this.QDRANT_SEARCH_RESULT_COUNT = process.env.QDRANT_SEARCH_RESULT_COUNT;
   }
 
   async checkCollectionExists(collectionName) {
@@ -214,8 +215,9 @@ class qdrant {
     }
   }
 
-  async searchQdrant(collectionName, query, top = 5, filter = null) {
+  async searchQdrant(collectionName, query, top = 3, filter = null) {
     try {
+      top = parseInt(this.QDRANT_SEARCH_RESULT_COUNT);
       await this.ensureUserCollection(collectionName);
       const queryEmbedding = await this.getFastEmbedding(query);
       if (!Array.isArray(queryEmbedding) || queryEmbedding.length === 0) {
